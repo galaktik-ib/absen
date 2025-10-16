@@ -1,7 +1,9 @@
-# Gunakan image PHP + FPM
-FROM php:8.2-fpm
+# Gunakan image PHP 8.1 + FPM (sesuai versi Laragon kamu)
+FROM php:8.1-fpm
 
-# Install dependencies sistem
+# ------------------------------------------------------------
+# 1️⃣ Install dependency sistem yang dibutuhkan Laravel & ekstensi PHP
+# ------------------------------------------------------------
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -16,26 +18,43 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_pgsql mbstring zip gd
 
-# Install Composer
+# ------------------------------------------------------------
+# 2️⃣ Install Composer (buat install dependensi PHP)
+# ------------------------------------------------------------
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Set working directory
+# ------------------------------------------------------------
+# 3️⃣ Set working directory di dalam container
+# ------------------------------------------------------------
 WORKDIR /var/www/html
 
-# Copy semua file project ke container
+# ------------------------------------------------------------
+# 4️⃣ Copy semua file project ke dalam container
+# ------------------------------------------------------------
 COPY . .
 
-# Install dependensi PHP
+# ------------------------------------------------------------
+# 5️⃣ Install dependensi Laravel
+# ------------------------------------------------------------
 RUN composer install --no-dev --optimize-autoloader
 
-# (Opsional) build asset frontend (kalau pakai vite/tailwind)
+# ------------------------------------------------------------
+# 6️⃣ (Opsional) Build asset frontend (kalau pakai Tailwind/Vite)
+# ------------------------------------------------------------
+# RUN apt-get install -y nodejs npm
 # RUN npm ci && npm run build
 
-# Set permission folder storage & cache
+# ------------------------------------------------------------
+# 7️⃣ Set permission supaya storage & cache bisa ditulis
+# ------------------------------------------------------------
 RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Laravel listen di port 10000 (Render butuh ini)
+# ------------------------------------------------------------
+# 8️⃣ Laravel listen di port 10000 (Render butuh $PORT ini)
+# ------------------------------------------------------------
 EXPOSE 10000
 
-# Jalankan server Laravel
+# ------------------------------------------------------------
+# 9️⃣ Jalankan Laravel pakai built-in server
+# ------------------------------------------------------------
 CMD php artisan serve --host=0.0.0.0 --port=10000
